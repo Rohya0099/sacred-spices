@@ -1,0 +1,315 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
+enum OrderStatus {
+  PLACED
+  CONFIRMED
+  PACKED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+}
+
+enum GeneratedContentType {
+  INSTAGRAM_CAPTION
+  AD_COPY
+  WHATSAPP_MESSAGE
+  FESTIVAL_CAMPAIGN
+  PRODUCT_STORY
+  EMAIL_COPY
+}
+
+model User {
+  id             String           @id @default(cuid())
+  email          String           @unique
+  name           String?
+  phone          String?
+  passwordHash   String?
+  role           UserRole         @default(CUSTOMER)
+  customer       Customer?
+  cart           Cart?
+  wishlist       Wishlist?
+  orders         Order[]
+  reviews        Review[]
+  subscriptions  Subscription[]
+  recipes        Recipe[]
+  generatedItems GeneratedContent[]
+  communityPosts CommunityPost[]
+  passwordResetTokens PasswordResetToken[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+}
+
+model Customer {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstOrderAt   DateTime?
+  lifetimeValue  Decimal  @default(0) @db.Decimal(12, 2)
+  tasteProfile   Json?
+  addresses      Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id                    String      @id @default(cuid())
+  categoryId            String
+  category              Category    @relation(fields: [categoryId], references: [id])
+  name                  String
+  slug                  String      @unique
+  description           String
+  emotionalStory        String
+  ingredients           String[]
+  tasteProfile          String[]
+  regionalInspiration   String
+  cookingRecommendations String[]
+  shelfLife             String
+  spiceLevel            Int
+  price                 Decimal     @db.Decimal(10, 2)
+  compareAtPrice        Decimal?    @db.Decimal(10, 2)
+  inventory             Int         @default(0)
+  primaryImage          String      @default("")
+  images                String[]
+  weight                String      @default("250g")
+  packageType           String      @default("Premium Pouch")
+  storageInstructions   String      @default("Store in a cool, dry place. Use a clean, dry spoon.")
+  spiceLevelLabel       String      @default("Medium")
+  bestWith              String[]    @default([])
+  servesApprox          String      @default("Serves family meals depending on usage.")
+  handcraftedNotes      String      @default("Prepared in small batches for freshness and aroma.")
+  badge                 String?
+  isBestSeller          Boolean     @default(false)
+  isFeatured            Boolean     @default(false)
+  orderItems            OrderItem[]
+  cartItems             CartItem[]
+  wishlistItems         WishlistItem[]
+  reviews               Review[]
+  generatedItems        GeneratedContent[]
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String?
+  user            User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  status          OrderStatus @default(PLACED)
+  subtotal        Decimal     @db.Decimal(12, 2)
+  discount        Decimal     @default(0) @db.Decimal(12, 2)
+  shipping        Decimal     @default(0) @db.Decimal(12, 2)
+  total           Decimal     @db.Decimal(12, 2)
+  couponCode      String?
+  razorpayOrderId String?      @unique
+  razorpayPaymentId String?    @unique
+  trackingCode    String          @unique @default(cuid())
+  isPreorder      Boolean     @default(false)
+  adminNote        String?
+  address         Json
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+model PaymentWebhookEvent {
+  id                String   @id @default(cuid())
+  eventId           String   @unique
+  eventType         String
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  processedAt       DateTime @default(now())
+  raw               Json
+
+  @@index([eventType, processedAt])
+  @@index([razorpayOrderId])
+}
+
+model Wishlist {
+  id        String         @id @default(cuid())
+  userId    String         @unique
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     WishlistItem[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model WishlistItem {
+  id         String   @id @default(cuid())
+  wishlistId String
+  wishlist   Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  createdAt  DateTime @default(now())
+
+  @@unique([wishlistId, productId])
+}
+
+model Coupon {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  description String?
+  percentOff  Int?
+  amountOff   Decimal? @db.Decimal(10, 2)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  unitPrice Decimal @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String?    @unique
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId String?    @unique
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  rating    Int
+  title     String?
+  body      String
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Subscription {
+  id              String             @id @default(cuid())
+  userId          String
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String             @default("Sacred Monthly Box")
+  status          SubscriptionStatus @default(ACTIVE)
+  spicePreference String
+  familySize      String
+  region          String
+  spicyLevel      Int
+  nextBillingAt   DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+}
+
+model Recipe {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  title       String
+  slug        String   @unique
+  story       String?
+  ingredients String[]
+  steps       String[]
+  region      String?
+  images      String[]
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model GeneratedContent {
+  id        String               @id @default(cuid())
+  userId    String?
+  user      User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  productId String?
+  product   Product?             @relation(fields: [productId], references: [id], onDelete: SetNull)
+  type      GeneratedContentType
+  prompt    String
+  output    String
+  metadata  Json?
+  createdAt DateTime             @default(now())
+
+  @@index([userId, createdAt])
+  @@index([type, createdAt])
+}
+
+model CommunityPost {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  title     String
+  body      String
+  images    String[]
+  tags      String[]
+  isApproved Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isApproved, createdAt])
+  @@index([userId, createdAt])
+}

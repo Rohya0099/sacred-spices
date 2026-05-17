@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --font-display: "Cormorant Garamond";
+  --font-body: "Inter";
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(215, 111, 32, 0.18), transparent 32rem),
+    radial-gradient(circle at 80% 18%, rgba(139, 30, 63, 0.14), transparent 30rem),
+    #090604;
+  color: #fff4df;
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+::selection {
+  background: #f3a51f;
+  color: #090604;
+}
+
+.sacred-border {
+  border: 1px solid rgba(255, 211, 106, 0.2);
+}
+
+.glass {
+  background: rgba(21, 16, 12, 0.72);
+  backdrop-filter: blur(18px);
+}
+
+.spice-field {
+  background-image:
+    radial-gradient(circle at 15% 25%, rgba(243, 165, 31, 0.3) 0 2px, transparent 3px),
+    radial-gradient(circle at 68% 38%, rgba(215, 111, 32, 0.26) 0 1px, transparent 3px),
+    radial-gradient(circle at 82% 78%, rgba(255, 211, 106, 0.22) 0 2px, transparent 3px);
+  background-size: 150px 150px;
+  animation: drift 18s linear infinite;
+}
+
+@keyframes drift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 150px 260px;
+  }
+}
+
+@keyframes steam {
+  0% {
+    transform: translateY(18px) scaleX(0.75);
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.32;
+  }
+  100% {
+    transform: translateY(-90px) scaleX(1.3);
+    opacity: 0;
+  }
+}
+
+.steam {
+  animation: steam 7s ease-in-out infinite;
+}
+
+.field {
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 211, 106, 0.16);
+  background: #090604;
+  padding: 0.75rem 1rem;
+  color: #fff4df;
+  outline: none;
+}
+
+.field::placeholder {
+  color: rgba(255, 244, 223, 0.56);
+}
+
+.field option {
+  background: #090604;
+  color: #fff4df;
+}
+
+.field:focus {
+  border-color: #f3a51f;
+}

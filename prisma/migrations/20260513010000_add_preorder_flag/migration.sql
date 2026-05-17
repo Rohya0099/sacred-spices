@@ -1,0 +1,1 @@
+ALTER TABLE "Order" ADD COLUMN "isPreorder" BOOLEAN NOT NULL DEFAULT false;
