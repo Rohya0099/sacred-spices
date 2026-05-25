@@ -9,6 +9,7 @@ import { csrfFetch } from "@/lib/client-security";
 import { FssaiTrustNote } from "@/components/fssai-trust-note";
 import { businessInfo } from "@/lib/business-info";
 import { shouldCreatePreorderFromCheckout } from "@/lib/preorder";
+import { resolveProductImage } from "@/lib/product-images";
 
 type CartItem = {
   productId: string;
@@ -22,6 +23,7 @@ type CartItem = {
     images: string[];
     inventory: number;
     badge?: string | null;
+    isActive: boolean;
   };
 };
 
@@ -63,6 +65,7 @@ export function CheckoutFlow() {
   const estimatedTotal = (cart?.total ?? 0) + shipping;
   const itemCount = useMemo(() => cart?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0, [cart]);
   const isPreorder = useMemo(() => shouldCreatePreorderFromCheckout(cart?.items ?? [], preorderSlug), [cart?.items, preorderSlug]);
+  const hasUnavailableItem = useMemo(() => cart?.items.some((item) => !item.product.isActive) ?? false, [cart]);
   const preorderWarning = preorderSlug && cart?.items.length && !isPreorder
     ? "Pre-order checkout was requested, but this cart is not eligible for preorder. It will continue as a normal order."
     : null;
@@ -281,7 +284,12 @@ export function CheckoutFlow() {
                 </div>
                 <div className="divide-y divide-turmeric/10">
                   {cart.items.map((item) => {
-                    const image = item.product.primaryImage || item.product.images[0] || "/images/products/mango-pickle.jpg";
+                    const image = resolveProductImage({
+                      name: item.product.name,
+                      slug: item.product.slug,
+                      primaryImage: item.product.primaryImage,
+                      images: item.product.images
+                    });
                     return (
                       <article key={item.productId} className="grid gap-4 p-5 sm:grid-cols-[120px_1fr]">
                         <Link href={`/products/${item.product.slug}`} className="relative aspect-square overflow-hidden rounded-lg border border-turmeric/12 bg-obsidian">
@@ -293,6 +301,7 @@ export function CheckoutFlow() {
                               {item.product.name}
                             </Link>
                             <p className="mt-2 text-sm text-ivory/54">In stock: {item.product.inventory}</p>
+                            {!item.product.isActive ? <p className="mt-2 inline-flex rounded-full bg-rose/15 px-3 py-1 text-xs font-semibold text-rose">Unavailable</p> : null}
                             {item.product.badge ? <p className="mt-2 inline-flex rounded-full bg-saffron/12 px-3 py-1 text-xs font-semibold text-saffron">{item.product.badge}</p> : null}
                             <div className="mt-5 flex flex-wrap items-center gap-3">
                               <div className="inline-flex items-center overflow-hidden rounded-full border border-turmeric/20">
@@ -309,7 +318,7 @@ export function CheckoutFlow() {
                                 <button
                                   type="button"
                                   onClick={() => updateQuantity(item, item.quantity + 1)}
-                                  disabled={cartLoading === item.productId || item.quantity >= item.product.inventory}
+                                  disabled={cartLoading === item.productId || !item.product.isActive || item.quantity >= item.product.inventory}
                                   className="grid size-10 place-items-center text-saffron transition hover:bg-saffron hover:text-obsidian disabled:opacity-50"
                                   aria-label={`Increase ${item.product.name} quantity`}
                                 >
@@ -361,7 +370,12 @@ export function CheckoutFlow() {
                     className="field flex-1"
                   />
                 </div>
-                <button className="inline-flex items-center justify-center gap-2 rounded-full bg-saffron px-6 py-4 font-semibold text-obsidian shadow-ember transition hover:bg-turmeric">
+                {hasUnavailableItem ? (
+                  <p className="rounded-lg border border-rose/30 bg-rose/10 px-4 py-3 text-sm font-semibold text-ivory">
+                    This product is currently unavailable.
+                  </p>
+                ) : null}
+                <button disabled={hasUnavailableItem || paymentLoading} className="inline-flex items-center justify-center gap-2 rounded-full bg-saffron px-6 py-4 font-semibold text-obsidian shadow-ember transition hover:bg-turmeric disabled:cursor-not-allowed disabled:opacity-60">
                   <CreditCard size={18} />
                   {paymentLoading ? "Opening payment..." : isPreorder ? "Pre-order and pay" : "Place order and pay"}
                 </button>

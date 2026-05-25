@@ -16,7 +16,7 @@ export const products = [
     name: "Sacred Garam Masala",
     category: "Masalas",
     price: 549,
-    image: "/images/products/sacred-garam-masala.jpg",
+    image: "/images/products/sacred-garam-masala-1.png",
     taste: "Warm, layered, aromatic",
     spice: 3,
     region: "North Indian family kitchens",

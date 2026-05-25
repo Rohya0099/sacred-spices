@@ -127,6 +127,7 @@ export async function POST(request: Request) {
 
     const user = await getSessionUser();
     const dbProducts = await prisma.product.findMany({
+      where: { inventory: { gt: 0 }, isActive: true },
       include: { category: true },
       orderBy: [{ isBestSeller: "desc" }, { isFeatured: "desc" }, { createdAt: "desc" }]
     });

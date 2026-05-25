@@ -1,8 +1,24 @@
 import type { Cart, CartItem, Category, Order, OrderItem, Product, User, Wishlist, WishlistItem } from "@prisma/client";
+import { resolveProductImage, resolveProductImages } from "@/lib/product-images";
 
 export function serializeProduct(product: Product & { category?: Category | null }) {
+  const category = product.category?.name ?? null;
   return {
     ...product,
+    primaryImage: resolveProductImage({
+      name: product.name,
+      slug: product.slug,
+      category,
+      primaryImage: product.primaryImage,
+      images: product.images
+    }),
+    images: resolveProductImages({
+      name: product.name,
+      slug: product.slug,
+      category,
+      primaryImage: product.primaryImage,
+      images: product.images
+    }),
     price: Number(product.price),
     compareAtPrice: product.compareAtPrice ? Number(product.compareAtPrice) : null
   };

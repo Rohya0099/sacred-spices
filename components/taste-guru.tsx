@@ -6,6 +6,7 @@ import { ChefHat, Gift, Sparkles, UsersRound, Utensils } from "lucide-react";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { ProductImage } from "@/components/product-image";
 import { csrfFetch } from "@/lib/client-security";
+import { resolveProductImage } from "@/lib/product-images";
 
 const questions = [
   { key: "heat", label: "Spicy or mild?", options: ["Gentle", "Medium", "Bold"] },
@@ -136,7 +137,18 @@ export function TasteGuru() {
                 {result.recommendations.map((item) => (
                   <article key={item.product.slug} className="grid gap-4 rounded-lg border border-turmeric/16 bg-obsidian p-4 sm:grid-cols-[140px_1fr]">
                     <Link href={`/products/${item.product.slug}`} className="relative aspect-square overflow-hidden rounded-lg border border-turmeric/12 bg-charcoal">
-                      <ProductImage src={item.product.images[0]} alt={item.product.name} fill className="object-cover" sizes="140px" />
+                      <ProductImage
+                        src={resolveProductImage({
+                          name: item.product.name,
+                          slug: item.product.slug,
+                          category: item.product.category?.name,
+                          images: item.product.images
+                        })}
+                        alt={item.product.name}
+                        fill
+                        className="object-cover"
+                        sizes="140px"
+                      />
                     </Link>
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.22em] text-saffron">{item.product.category?.name ?? "Sacred Spices"}</p>

@@ -39,6 +39,7 @@ export async function POST(request: Request) {
       where: { OR: [{ id: parsed.data.productId }, { slug: parsed.data.productId }] }
     });
     if (!product) return NextResponse.json({ error: "Product not found." }, { status: 404 });
+    if (!product.isActive) return NextResponse.json({ error: "This product is currently unavailable." }, { status: 409 });
 
     const cart = await getOrCreateCart();
     await prisma.cartItem.upsert({
@@ -75,6 +76,7 @@ export async function PATCH(request: Request) {
       where: { OR: [{ id: parsed.data.productId }, { slug: parsed.data.productId }] }
     });
     if (!product) return NextResponse.json({ error: "Product not found." }, { status: 404 });
+    if (!product.isActive) return NextResponse.json({ error: "This product is currently unavailable." }, { status: 409 });
 
     await prisma.cartItem.update({
       where: { cartId_productId: { cartId: cart.id, productId: product.id } },

@@ -60,6 +60,10 @@ export async function POST(request: Request) {
       parsed.data.preorderSlug ?? (parsed.data.isPreorder ? undefined : null)
     );
     const unavailable = cart.items.find((item) => item.product.inventory < item.quantity);
+    const pausedItem = cart.items.find((item) => !item.product.isActive);
+    if (pausedItem) {
+      return NextResponse.json({ error: "This product is currently unavailable." }, { status: 409 });
+    }
     if (unavailable && !isPreorder) {
       return NextResponse.json({ error: `${unavailable.product.name} does not have enough stock.` }, { status: 409 });
     }

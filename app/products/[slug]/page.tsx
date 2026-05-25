@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { Flame, Heart, Leaf, Sparkles } from "lucide-react";
 import { PageShell } from "@/components/brand-shell";
 import { Breadcrumb } from "@/components/breadcrumb";
@@ -10,6 +11,7 @@ import { products } from "@/lib/data";
 import { prisma } from "@/lib/prisma";
 import { isPreorderEligible } from "@/lib/preorder";
 import { productToCard } from "@/lib/product-view";
+import { resolveProductImage, resolveProductImages } from "@/lib/product-images";
 
 export const dynamic = "force-dynamic";
 
@@ -26,14 +28,32 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   }
 
   const staticProduct = products.find((item) => item.slug === slug);
+  const dbProductImage = dbProduct
+    ? resolveProductImage({
+        name: dbProduct.name,
+        slug: dbProduct.slug,
+        category: dbProduct.category.name,
+        primaryImage: dbProduct.primaryImage,
+        images: dbProduct.images
+      })
+    : null;
+  const dbProductImages = dbProduct
+    ? resolveProductImages({
+        name: dbProduct.name,
+        slug: dbProduct.slug,
+        category: dbProduct.category.name,
+        primaryImage: dbProduct.primaryImage,
+        images: dbProduct.images
+      })
+    : [];
   const product = dbProduct
     ? {
         slug: dbProduct.slug,
         name: dbProduct.name,
         category: dbProduct.category.name,
         price: Number(dbProduct.price),
-        image: dbProduct.primaryImage || dbProduct.images[0] || null,
-        images: dbProduct.images,
+        image: dbProductImage,
+        images: dbProductImages,
         weight: dbProduct.weight,
         packageType: dbProduct.packageType,
         taste: dbProduct.tasteProfile.join(", "),
@@ -73,6 +93,26 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   if (!product) {
     notFound();
+  }
+
+  if (dbProduct && !dbProduct.isActive) {
+    return (
+      <PageShell>
+        <section className="px-4 py-20 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-3xl rounded-lg border border-turmeric/16 bg-charcoal p-8">
+            <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Products", href: "/products" }, { label: product.name }]} />
+            <p className="mt-6 text-sm font-semibold uppercase tracking-[0.28em] text-saffron">Product unavailable</p>
+            <h1 className="mt-4 font-display text-5xl font-semibold text-ivory">{product.name}</h1>
+            <p className="mt-5 text-lg leading-8 text-ivory/68">
+              This product is currently unavailable.
+            </p>
+            <Link href="/products" className="mt-8 inline-flex rounded-full bg-saffron px-6 py-3 text-sm font-semibold text-obsidian">
+              Browse available products
+            </Link>
+          </div>
+        </section>
+      </PageShell>
+    );
   }
 
   const relatedDbProducts = dbProduct

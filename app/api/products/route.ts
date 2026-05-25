@@ -32,7 +32,8 @@ const productSchema = z.object({
   handcraftedNotes: z.string().min(5).default("Prepared in small batches for freshness and aroma."),
   badge: z.string().optional().nullable(),
   isBestSeller: z.boolean().default(false),
-  isFeatured: z.boolean().default(false)
+  isFeatured: z.boolean().default(false),
+  isActive: z.boolean().default(true)
 });
 
 function productValidationMessage(error: z.ZodError) {

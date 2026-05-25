@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { BarChart3, Boxes, Download, FileText, PackageCheck, Plus, Save, Trash2, Users } from "lucide-react";
+import { BarChart3, Boxes, Download, FileText, PackageCheck, Pause, Play, Plus, Save, Trash2, Users } from "lucide-react";
 import { ImageUpload } from "@/components/image-upload";
 import { ProductCard } from "@/components/product-card";
 import { csrfFetch } from "@/lib/client-security";
+import { resolveProductImage } from "@/lib/product-images";
 
 type Category = { id: string; name: string };
 type Product = {
@@ -35,6 +36,7 @@ type Product = {
   badge?: string | null;
   isFeatured: boolean;
   isBestSeller: boolean;
+  isActive: boolean;
   category?: Category;
 };
 type OrderAddress = { name?: string; phone?: string; line1?: string; line2?: string; city?: string; state?: string; pincode?: string };
@@ -81,7 +83,8 @@ const emptyProduct = {
   handcraftedNotes: "Prepared in small batches for freshness and aroma.",
   badge: "",
   isFeatured: false,
-  isBestSeller: false
+  isBestSeller: false,
+  isActive: true
 };
 
 function parseCsvInput(value: string) {
@@ -121,7 +124,8 @@ function productPayloadFromForm(form: typeof emptyProduct, categoryId: string, i
     handcraftedNotes: form.handcraftedNotes.trim(),
     badge: form.badge.trim() || null,
     isFeatured: Boolean(form.isFeatured),
-    isBestSeller: Boolean(form.isBestSeller)
+    isBestSeller: Boolean(form.isBestSeller),
+    isActive: Boolean(form.isActive)
   };
 }
 
@@ -216,14 +220,28 @@ export function AdminConsole() {
       handcraftedNotes: product.handcraftedNotes,
       badge: product.badge ?? "",
       isFeatured: product.isFeatured,
-      isBestSeller: product.isBestSeller
+      isBestSeller: product.isBestSeller,
+      isActive: product.isActive
     });
   }
 
   async function deleteProduct(id: string) {
     setMessage("Deleting product...");
     const response = await csrfFetch(`/api/products/${id}`, { method: "DELETE" });
-    setMessage(response.ok ? "Product deleted." : "Could not delete product.");
+    const json = await response.json();
+    setMessage(response.ok ? "Product deleted." : json.error ?? "Could not delete product.");
+    await load();
+  }
+
+  async function toggleProductStatus(product: Product) {
+    const nextActive = !product.isActive;
+    setMessage(nextActive ? "Resuming product..." : "Pausing product...");
+    const response = await csrfFetch(`/api/products/${product.id}`, {
+      method: "PUT",
+      body: JSON.stringify({ isActive: nextActive })
+    });
+    const json = await response.json();
+    setMessage(response.ok ? (nextActive ? "Product resumed." : "Product paused.") : json.error ?? "Could not update product status.");
     await load();
   }
 
@@ -294,7 +312,7 @@ export function AdminConsole() {
                 {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
               </select>
               {Object.keys(emptyProduct).map((key) =>
-                key === "isFeatured" || key === "isBestSeller" ? (
+                key === "isFeatured" || key === "isBestSeller" || key === "isActive" ? (
                   <label key={key} className="flex items-center gap-2 text-sm text-ivory/70">
                     <input type="checkbox" checked={Boolean(form[key as keyof typeof form])} onChange={(event) => setForm((current) => ({ ...current, [key]: event.target.checked }))} />
                     {key}
@@ -313,7 +331,13 @@ export function AdminConsole() {
                     name: form.name || "Product preview",
                     category: categories.find((item) => item.id === categoryId)?.name ?? "Product",
                     price: Number(form.price) || 0,
-                    image: imageUrls[0] || form.primaryImage || null,
+                    image: resolveProductImage({
+                      name: form.name,
+                      slug: form.slug,
+                      category: categories.find((item) => item.id === categoryId)?.name ?? "Product",
+                      primaryImage: form.primaryImage,
+                      images: imageUrls.length ? imageUrls : parseCsvInput(form.images)
+                    }),
                     weight: form.weight,
                     spiceLevelLabel: form.spiceLevelLabel,
                     inventory: Number(form.inventory) || 0,
@@ -338,12 +362,21 @@ export function AdminConsole() {
             </div>
             <div className="mt-5 grid gap-3">
               {products.map((product) => (
-                <div key={product.id} className="grid gap-3 rounded-lg border border-turmeric/10 p-4 md:grid-cols-[1fr_auto_auto] md:items-center">
+                <div key={product.id} className="grid gap-3 rounded-lg border border-turmeric/10 p-4 md:grid-cols-[1fr_auto_auto_auto] md:items-center">
                   <div>
-                    <p className="font-semibold text-ivory">{product.name}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-semibold text-ivory">{product.name}</p>
+                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${product.isActive ? "bg-emerald-500/12 text-emerald-200" : "bg-rose/15 text-rose"}`}>
+                        {product.isActive ? "Active" : "Paused"}
+                      </span>
+                    </div>
                     <p className="text-sm text-ivory/50">Rs. {product.price} · Stock {product.inventory}</p>
                   </div>
                   <button onClick={() => editProduct(product)} className="rounded-full border border-turmeric/20 px-4 py-2 text-sm text-saffron">Edit</button>
+                  <button onClick={() => toggleProductStatus(product)} className="inline-flex items-center gap-2 rounded-full border border-turmeric/20 px-4 py-2 text-sm text-ivory">
+                    {product.isActive ? <Pause size={15} /> : <Play size={15} />}
+                    {product.isActive ? "Pause" : "Resume"}
+                  </button>
                   <button onClick={() => deleteProduct(product.id)} className="inline-flex items-center gap-2 rounded-full border border-rose/40 px-4 py-2 text-sm text-ivory">
                     <Trash2 size={15} />
                     Delete

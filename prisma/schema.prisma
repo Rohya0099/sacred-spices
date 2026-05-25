@@ -122,6 +122,7 @@ model Product {
   badge                 String?
   isBestSeller          Boolean     @default(false)
   isFeatured            Boolean     @default(false)
+  isActive              Boolean     @default(true)
   orderItems            OrderItem[]
   cartItems             CartItem[]
   wishlistItems         WishlistItem[]

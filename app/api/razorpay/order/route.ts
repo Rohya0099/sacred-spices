@@ -26,13 +26,18 @@ export async function POST(request: Request) {
       where: {
         id: parsed.data.orderId,
         userId: user.id
-      }
+      },
+      include: { items: { include: { product: true } } }
     });
     if (!localOrder) {
       return NextResponse.json({ error: "Order not found." }, { status: 404 });
     }
     if (localOrder.status !== "PLACED") {
       return NextResponse.json({ error: "Order is not awaiting payment." }, { status: 400 });
+    }
+    const pausedItem = localOrder.items.find((item) => !item.product.isActive);
+    if (pausedItem) {
+      return NextResponse.json({ error: "This product is currently unavailable." }, { status: 409 });
     }
 
     const keyId = assertEnv("RAZORPAY_KEY_ID");

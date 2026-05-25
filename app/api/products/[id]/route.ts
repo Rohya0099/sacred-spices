@@ -32,7 +32,8 @@ const updateProductSchema = z.object({
   handcraftedNotes: z.string().min(5).optional(),
   badge: z.string().nullable().optional(),
   isBestSeller: z.boolean().optional(),
-  isFeatured: z.boolean().optional()
+  isFeatured: z.boolean().optional(),
+  isActive: z.boolean().optional()
 });
 
 function productValidationMessage(error: z.ZodError) {
@@ -136,9 +137,13 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
     const { id } = await params;
     const linkedOrderItem = await prisma.orderItem.findFirst({ where: { productId: id }, select: { id: true } });
     if (linkedOrderItem) {
-      return NextResponse.json({ error: "Products with order history cannot be deleted. Set inventory to 0 instead." }, { status: 409 });
+      return NextResponse.json({ error: "This product has order history. Pause it instead." }, { status: 409 });
     }
-    await prisma.product.delete({ where: { id } });
+    await prisma.$transaction([
+      prisma.cartItem.deleteMany({ where: { productId: id } }),
+      prisma.wishlistItem.deleteMany({ where: { productId: id } }),
+      prisma.product.delete({ where: { id } })
+    ]);
     return NextResponse.json({ status: "deleted" });
   } catch (error) {
     return handleApiError(error);

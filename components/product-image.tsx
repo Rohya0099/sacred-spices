@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
+import { defaultProductImageForName } from "@/lib/product-images";
 
 type ProductImageProps = {
   src?: string | null;
@@ -14,8 +15,6 @@ type ProductImageProps = {
   width?: number;
   height?: number;
 };
-
-const fallbackSrc = "/images/products/mango-pickle.jpg";
 
 export function ProductImage({ src, alt, fill, priority, className, sizes, width, height }: ProductImageProps) {
   const [failed, setFailed] = useState(false);
@@ -32,7 +31,7 @@ export function ProductImage({ src, alt, fill, priority, className, sizes, width
     );
   }
 
-  const imageSrc = failed ? fallbackSrc : src;
+  const imageSrc = failed ? defaultProductImageForName(alt) : src;
 
   return (
     <>

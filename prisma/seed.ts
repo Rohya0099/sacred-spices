@@ -343,6 +343,8 @@ const premiumDetails: Record<string, {
 };
 
 function localProductImages(slug: string) {
+  if (slug === "kitchen-king-masala") return ["/images/products/kitchen-king-masala.jpg"];
+  if (slug === "sacred-garam-masala") return ["/images/products/sacred-garam-masala-1.png"];
   return [`/images/products/${slug}.jpg`, `/images/products/${slug}-1.jpg`, `/images/products/${slug}-2.jpg`];
 }
 
