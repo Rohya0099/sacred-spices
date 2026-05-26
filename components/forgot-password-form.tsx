@@ -19,7 +19,7 @@ export function ForgotPasswordForm() {
     });
     const json = await response.json();
     setLoading(false);
-    setMessage(json.message ?? json.error ?? "If an account exists, a reset link has been sent.");
+    setMessage(json.message ?? json.error ?? "If account exists, email sent");
     if (json.devResetLink) setDevResetLink(json.devResetLink);
   }
 

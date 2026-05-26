@@ -35,6 +35,7 @@ export function LandingExperience({ featuredProducts }: { featuredProducts: Prod
             className="max-w-3xl pb-12"
           >
             <p className="text-sm font-semibold uppercase tracking-[0.34em] text-saffron">AI-first Indian food luxury</p>
+            <p className="mt-4 text-sm font-semibold text-ivory/76">100% Pure Vegetarian Products</p>
             <h1 className="mt-6 font-display text-6xl font-semibold leading-[0.95] text-ivory sm:text-7xl lg:text-8xl">
               Sacred Flavors of India
             </h1>
@@ -73,7 +74,7 @@ export function LandingExperience({ featuredProducts }: { featuredProducts: Prod
 
       <Section eyebrow="Featured products" title="Blends with a story behind every pinch">
         {featuredProducts.length ? (
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="mx-auto grid max-w-6xl gap-5 md:grid-cols-3">
             {featuredProducts.map((product) => (
               <ProductCard key={product.slug} product={product} />
             ))}

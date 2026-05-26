@@ -1,11 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Flame, Heart, Leaf, Sparkles } from "lucide-react";
+import { Flame, Heart, Leaf, Sparkles, Star } from "lucide-react";
 import { PageShell } from "@/components/brand-shell";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { ProductCard } from "@/components/product-card";
 import { AddToCartButton } from "@/components/add-to-cart-button";
-import { FssaiTrustNote } from "@/components/fssai-trust-note";
 import { ProductExperienceHero } from "@/components/product-experience-hero";
 import { products } from "@/lib/data";
 import { prisma } from "@/lib/prisma";
@@ -137,34 +136,25 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     .slice(0, 4)
     .map(productToCard);
 
-  const detailCards = [
-    ["Taste profile", product.taste, Sparkles],
-    ["Regional inspiration", product.region, Leaf],
-    ["Best with", product.bestWith.length ? product.bestWith.join(", ") : product.cookingRecommendations.join(", "), Heart],
-    ["Package", `${product.weight} in ${product.packageType}`, Sparkles],
-    ["Shelf life", product.shelfLife, Sparkles],
-    ["Storage", product.storageInstructions, Leaf],
-    ["Ingredients", product.ingredients.join(", "), Leaf],
-    ["Serves approx.", product.servesApprox, Heart]
+  const detailGroups = [
+    ["Description", product.description, Sparkles],
+    ["Highlights", [product.taste, product.region, `${product.weight} ${product.packageType}`, product.shelfLife].join(" · "), Heart],
+    ["Usage", product.bestWith.length ? product.bestWith.join(", ") : product.cookingRecommendations.join(", "), Leaf],
+    ["Why this product", product.handcraftedNotes, Sparkles]
   ] as const;
-
-  const categoryCopy = product.category.toLowerCase().includes("pickle")
-    ? "Oil level may naturally vary in handcrafted batches."
-    : product.name.toLowerCase().includes("chai")
-      ? "Made for slow evenings and warm conversations."
-      : "Slow-roasted for deeper aroma and flavor.";
 
   return (
     <PageShell>
-      <section className="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <section className="px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <div className="mx-auto max-w-7xl">
           <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Products", href: "/products" }, { label: product.name }]} />
         </div>
-        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.88fr_1fr] lg:items-start">
+        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1fr] lg:items-start">
           <ProductExperienceHero name={product.name} category={product.category} image={product.image} images={product.images} />
-          <div className="lg:max-h-[calc(100vh-12rem)] lg:overflow-hidden">
+          <div className="grid gap-5">
             <div className="flex flex-wrap items-center gap-3">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-saffron">{product.category}</p>
+              <p className="text-xs font-semibold text-ivory/70">100% Vegetarian</p>
               {product.badge ? (
                 <p className="inline-flex rounded-full bg-saffron px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-obsidian">
                   {product.badge}
@@ -172,12 +162,18 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               ) : null}
             </div>
 
-            <h1 className="mt-3 font-display text-5xl font-semibold leading-tight text-ivory sm:text-6xl">{product.name}</h1>
-            <p className="mt-3 text-base leading-7 text-ivory/72">{product.story}</p>
-            <p className="mt-2 text-sm leading-6 text-ivory/56">{product.description}</p>
-            <p className="mt-3 text-sm font-semibold text-saffron/90">Move closer to the aroma - crafted in small batches.</p>
+            <div>
+              <h1 className="font-display text-5xl font-semibold leading-tight text-ivory sm:text-6xl">{product.name}</h1>
+              <div className="mt-3 flex items-center gap-2 text-saffron/85" aria-label="Rated 4.8 out of 5">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <Star key={index} size={16} className={index === 4 ? "fill-current opacity-55" : "fill-current"} />
+                ))}
+                <span className="ml-1 text-sm font-semibold text-ivory/62">4.8</span>
+              </div>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-ivory/68">{product.description}</p>
+            </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-4 rounded-lg border border-turmeric/16 bg-charcoal/80 p-3">
+            <div className="flex flex-wrap items-center gap-4 rounded-lg border border-turmeric/16 bg-charcoal/80 p-4">
               <p className="text-4xl font-semibold text-saffron">Rs. {product.price}</p>
               <span className="rounded-full border border-turmeric/20 px-3 py-1 text-sm text-ivory/70">{product.weight}</span>
               <span className="rounded-full border border-turmeric/20 px-3 py-1 text-sm text-ivory/70">{product.spiceLevelLabel}</span>
@@ -188,52 +184,38 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               </div>
             </div>
 
-            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <div className="grid gap-3 sm:grid-cols-2">
               <AddToCartButton
                 productId={product.slug}
                 returnTo={`/products/${product.slug}`}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-saffron px-5 py-3 font-semibold text-obsidian shadow-ember transition hover:bg-turmeric disabled:cursor-wait disabled:opacity-70 sm:w-auto"
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-saffron px-5 py-3 font-semibold text-obsidian shadow-ember transition hover:bg-turmeric disabled:cursor-wait disabled:opacity-70"
               />
               <AddToCartButton
                 productId={product.slug}
                 action="buy"
                 label="Buy now"
                 returnTo={`/products/${product.slug}`}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-saffron/60 px-5 py-3 font-semibold text-saffron transition hover:bg-saffron hover:text-obsidian disabled:cursor-wait disabled:opacity-70 sm:w-auto"
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-saffron/60 px-5 py-3 font-semibold text-saffron transition hover:bg-saffron hover:text-obsidian disabled:cursor-wait disabled:opacity-70"
               />
+            </div>
+            <div>
               {product.isPreorderEligible ? (
                 <AddToCartButton
                   productId={product.slug}
                   action="preorder"
                   label="Pre-order Now"
                   returnTo={`/products/${product.slug}`}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-turmeric/35 bg-charcoal px-5 py-3 font-semibold text-ivory transition hover:border-saffron hover:text-saffron disabled:cursor-wait disabled:opacity-70 sm:w-auto"
+                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-turmeric/35 bg-charcoal px-5 py-3 font-semibold text-ivory transition hover:border-saffron hover:text-saffron disabled:cursor-wait disabled:opacity-70"
                 />
               ) : null}
             </div>
 
-            <div className="mt-4 rounded-lg border border-saffron/20 bg-saffron/10 p-3 text-sm leading-6 text-ivory/76">
-              <strong className="text-saffron">Strong kitchen fit:</strong> best for {product.cookingRecommendations.join(", ")} with a {product.taste.toLowerCase()} profile.
-            </div>
-            <div className="mt-3 grid gap-3 sm:grid-cols-3">
-              {["Small batch", "No preservatives", "Secure Razorpay payment"].map((item) => (
-                <p key={item} className="rounded-lg border border-turmeric/16 bg-charcoal px-3 py-2 text-xs font-semibold text-ivory/70">{item}</p>
-              ))}
-            </div>
-            <p className="mt-3 rounded-lg border border-turmeric/16 bg-charcoal p-3 text-sm leading-6 text-ivory/68">
-              {product.handcraftedNotes} {categoryCopy}
-            </p>
-
-            <div className="mt-3">
-              <FssaiTrustNote compact />
-            </div>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {detailCards.map(([label, value, Icon]) => (
-                <div key={label} className="rounded-lg border border-turmeric/16 bg-charcoal p-3">
+            <div className="grid gap-3">
+              {detailGroups.map(([label, value, Icon]) => (
+                <div key={label} className="rounded-lg border border-turmeric/16 bg-charcoal p-4">
                   <Icon className="text-saffron" size={16} />
                   <p className="mt-2 text-[0.68rem] uppercase tracking-[0.2em] text-ivory/45">{label}</p>
-                  <p className="mt-1 text-xs leading-5 text-ivory/76">{value}</p>
+                  <p className="mt-2 text-sm leading-6 text-ivory/72">{value}</p>
                 </div>
               ))}
             </div>
@@ -241,7 +223,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         </div>
       </section>
 
-      <section className="px-4 pb-20 pt-4 sm:px-6 lg:px-8">
+      <section className="px-4 pb-20 pt-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <h2 className="font-display text-4xl text-ivory">Related products</h2>
           {related.length ? (

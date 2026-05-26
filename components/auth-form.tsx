@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { LogIn, UserPlus } from "lucide-react";
+import { Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
 import { csrfFetch } from "@/lib/client-security";
 
 type AuthFormProps = {
@@ -118,13 +118,29 @@ export function AuthForm({ role = "CUSTOMER", passwordResetAvailable = false }: 
 }
 
 function Field({ label, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
+  const [visible, setVisible] = useState(false);
+  const isPassword = props.type === "password";
+
   return (
     <label className="grid gap-2 text-sm text-ivory/72">
       {label}
-      <input
-        {...props}
-        className="rounded-lg border border-turmeric/16 bg-obsidian px-4 py-3 text-ivory outline-none transition focus:border-saffron"
-      />
+      <span className="relative">
+        <input
+          {...props}
+          type={isPassword && visible ? "text" : props.type}
+          className="w-full rounded-lg border border-turmeric/16 bg-obsidian px-4 py-3 pr-12 text-ivory outline-none transition focus:border-saffron"
+        />
+        {isPassword ? (
+          <button
+            type="button"
+            onClick={() => setVisible((current) => !current)}
+            className="absolute right-3 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-full text-ivory/58 transition hover:bg-ivory/8 hover:text-saffron"
+            aria-label={visible ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
+          >
+            {visible ? <EyeOff size={17} /> : <Eye size={17} />}
+          </button>
+        ) : null}
+      </span>
     </label>
   );
 }

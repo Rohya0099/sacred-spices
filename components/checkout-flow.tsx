@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CreditCard, MapPin, Minus, Plus, ShieldCheck, ShoppingCart, Tag, Trash2, Truck } from "lucide-react";
 import { csrfFetch } from "@/lib/client-security";
-import { FssaiTrustNote } from "@/components/fssai-trust-note";
 import { businessInfo } from "@/lib/business-info";
 import { shouldCreatePreorderFromCheckout } from "@/lib/preorder";
 import { resolveProductImage } from "@/lib/product-images";
@@ -60,6 +59,7 @@ export function CheckoutFlow() {
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [cartLoading, setCartLoading] = useState<string | null>(null);
   const [preorderSlug, setPreorderSlug] = useState<string | null>(null);
+  const [orderSubmitting, setOrderSubmitting] = useState(false);
 
   const shipping = cart?.total ? (cart.total > freeShippingAt ? 0 : 70) : 0;
   const estimatedTotal = (cart?.total ?? 0) + shipping;
@@ -118,6 +118,13 @@ export function CheckoutFlow() {
   }
 
   async function createOrder(formData: FormData) {
+    if (orderSubmitting || paymentLoading) return;
+    if (createdOrder) {
+      setMessage("Opening secure Razorpay checkout...");
+      await startRazorpayPayment(createdOrder);
+      return;
+    }
+    setOrderSubmitting(true);
     setMessage("Creating order...");
     const address = {
       name: formData.get("name"),
@@ -134,6 +141,7 @@ export function CheckoutFlow() {
     });
     const json = await response.json();
     if (!response.ok) {
+      setOrderSubmitting(false);
       setMessage(json.error ?? "Could not create order.");
       return;
     }
@@ -141,6 +149,7 @@ export function CheckoutFlow() {
     setMessage(isPreorder ? "Pre-order created. Opening secure Razorpay checkout..." : "Order created. Opening secure Razorpay checkout...");
     await loadCart();
     await startRazorpayPayment(json.order);
+    setOrderSubmitting(false);
   }
 
   async function ensureRazorpayScript() {
@@ -177,9 +186,13 @@ export function CheckoutFlow() {
       body: JSON.stringify({ orderId: order.id })
     });
     const paymentOrder = await paymentOrderResponse.json();
-    if (!paymentOrderResponse.ok) {
+    if (!paymentOrderResponse.ok || paymentOrder.success === false || !paymentOrder.keyId || !paymentOrder.order?.id) {
       setPaymentLoading(false);
-      setMessage(paymentOrder.error ?? "Could not create Razorpay order.");
+      setMessage(
+        paymentOrder.success === false
+          ? "Online payment is temporarily unavailable. Please contact support."
+          : paymentOrder.error ?? "Could not create Razorpay order."
+      );
       return;
     }
 
@@ -229,13 +242,13 @@ export function CheckoutFlow() {
   }
 
   return (
-    <section className="px-4 py-12 sm:px-6 lg:px-8">
+    <section className="px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <p className="text-sm font-semibold uppercase tracking-[0.28em] text-saffron">Cart and checkout</p>
         <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="font-display text-5xl font-semibold text-ivory sm:text-6xl">Your Cart</h1>
-            <p className="mt-4 max-w-2xl text-ivory/64">Review items, adjust quantities, add delivery details, and complete payment securely.</p>
+            <p className="mt-4 max-w-2xl text-ivory/64">Review your order, add delivery details, and pay securely.</p>
           </div>
           <Link href="/products/sacred-garam-masala" className="inline-flex items-center justify-center rounded-full border border-turmeric/25 px-5 py-3 text-sm font-semibold text-saffron transition hover:border-saffron">
             Continue shopping
@@ -253,10 +266,6 @@ export function CheckoutFlow() {
             {preorderWarning}
           </p>
         ) : null}
-        <div className="mt-4">
-          <FssaiTrustNote compact />
-        </div>
-
         {message === "Please login before checkout." ? (
           <Link href="/login?next=/checkout" className="mt-5 inline-flex rounded-full bg-saffron px-5 py-3 text-sm font-semibold text-obsidian">
             Login or register to continue
@@ -275,11 +284,11 @@ export function CheckoutFlow() {
         ) : null}
 
         {message === "Please login before checkout." || !cart?.items.length ? null : (
-          <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_380px]">
+          <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
             <div className="grid gap-6">
               <section className="rounded-lg border border-turmeric/16 bg-charcoal">
                 <div className="flex items-center justify-between border-b border-turmeric/12 px-5 py-4">
-                  <h2 className="font-display text-3xl text-ivory">Cart items</h2>
+                  <h2 className="font-display text-3xl text-ivory">Product summary</h2>
                   <span className="text-sm font-semibold text-saffron">{itemCount} item{itemCount === 1 ? "" : "s"}</span>
                 </div>
                 <div className="divide-y divide-turmeric/10">
@@ -291,7 +300,7 @@ export function CheckoutFlow() {
                       images: item.product.images
                     });
                     return (
-                      <article key={item.productId} className="grid gap-4 p-5 sm:grid-cols-[120px_1fr]">
+                      <article key={item.productId} className="grid gap-4 p-5 sm:grid-cols-[96px_1fr]">
                         <Link href={`/products/${item.product.slug}`} className="relative aspect-square overflow-hidden rounded-lg border border-turmeric/12 bg-obsidian">
                           <Image src={image} alt={item.product.name} fill className="object-cover" sizes="120px" />
                         </Link>
@@ -300,7 +309,7 @@ export function CheckoutFlow() {
                             <Link href={`/products/${item.product.slug}`} className="font-display text-2xl font-semibold text-ivory transition hover:text-saffron">
                               {item.product.name}
                             </Link>
-                            <p className="mt-2 text-sm text-ivory/54">In stock: {item.product.inventory}</p>
+                            <p className="mt-2 text-sm text-ivory/54">Rs. {item.product.price.toLocaleString("en-IN")} each</p>
                             {!item.product.isActive ? <p className="mt-2 inline-flex rounded-full bg-rose/15 px-3 py-1 text-xs font-semibold text-rose">Unavailable</p> : null}
                             {item.product.badge ? <p className="mt-2 inline-flex rounded-full bg-saffron/12 px-3 py-1 text-xs font-semibold text-saffron">{item.product.badge}</p> : null}
                             <div className="mt-5 flex flex-wrap items-center gap-3">
@@ -337,7 +346,6 @@ export function CheckoutFlow() {
                             </div>
                           </div>
                           <div className="text-left md:text-right">
-                            <p className="text-sm text-ivory/50">Rs. {item.product.price.toLocaleString("en-IN")} each</p>
                             <p className="mt-2 text-2xl font-semibold text-saffron">Rs. {item.lineTotal.toLocaleString("en-IN")}</p>
                           </div>
                         </div>
@@ -375,15 +383,20 @@ export function CheckoutFlow() {
                     This product is currently unavailable.
                   </p>
                 ) : null}
-                <button disabled={hasUnavailableItem || paymentLoading} className="inline-flex items-center justify-center gap-2 rounded-full bg-saffron px-6 py-4 font-semibold text-obsidian shadow-ember transition hover:bg-turmeric disabled:cursor-not-allowed disabled:opacity-60">
+                <p className="inline-flex items-center gap-2 text-sm font-semibold text-ivory/70">
+                  <ShieldCheck size={17} className="text-saffron" />
+                  Secure checkout powered by Razorpay
+                </p>
+                <p className="text-sm text-ivory/64">All products are 100% vegetarian and prepared with care</p>
+                <button disabled={hasUnavailableItem || paymentLoading || orderSubmitting} className="inline-flex items-center justify-center gap-2 rounded-full bg-saffron px-6 py-4 font-semibold text-obsidian shadow-ember transition hover:bg-turmeric disabled:cursor-not-allowed disabled:opacity-60">
                   <CreditCard size={18} />
-                  {paymentLoading ? "Opening payment..." : isPreorder ? "Pre-order and pay" : "Place order and pay"}
+                  {paymentLoading ? "Opening payment..." : orderSubmitting ? "Creating order..." : isPreorder ? "Pre-order and pay" : "Place order and pay"}
                 </button>
               </form>
             </div>
 
             <aside className="rounded-lg border border-turmeric/16 bg-ivory p-6 text-obsidian lg:sticky lg:top-28 lg:self-start">
-              <h2 className="font-display text-4xl font-semibold">Price details</h2>
+              <h2 className="font-display text-4xl font-semibold">Total</h2>
               <div className="mt-6 grid gap-4 text-sm">
                 <div className="flex justify-between">
                   <span>Subtotal ({itemCount} item{itemCount === 1 ? "" : "s"})</span>
@@ -396,13 +409,14 @@ export function CheckoutFlow() {
                 <div className="rounded-lg bg-obsidian/5 p-3 text-xs leading-5">
                   {shipping === 0 ? "Free shipping applied." : `Add Rs. ${(freeShippingAt + 1 - cart.total).toLocaleString("en-IN")} more for free shipping.`}
                 </div>
-                <div className="flex justify-between border-t border-obsidian/10 pt-4 text-xl font-semibold">
+                <div className="flex justify-between border-t border-obsidian/10 pt-4 text-2xl font-semibold">
                   <span>Total</span>
                   <span>Rs. {estimatedTotal.toLocaleString("en-IN")}</span>
                 </div>
               </div>
               <div className="mt-6 grid gap-3 text-sm text-obsidian/70">
-                <p className="inline-flex items-center gap-2"><ShieldCheck size={17} /> Secure Razorpay payment</p>
+                <p className="inline-flex items-center gap-2"><ShieldCheck size={17} /> Secure checkout powered by Razorpay</p>
+                <p>All products are 100% vegetarian and prepared with care</p>
                 <p className="inline-flex items-center gap-2"><Truck size={17} /> Tracked delivery after confirmation</p>
               </div>
               {createdOrder ? (

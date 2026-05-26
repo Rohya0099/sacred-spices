@@ -35,7 +35,7 @@ const productImage = "/images/products/sacred-garam-masala.jpg";
 const mangoPickleImage = "/images/products/mango-pickle.jpg";
 const lemonPickleImage = "/images/products/lemon-pickle.jpg";
 const chaiImage = "/images/products/royal-chai-masala.jpg";
-const giftImage = "/images/products/diwali-spice-gift-box.jpg";
+const giftImage = "/images/products/diwali-spice-gift-box-1.png";
 
 const catalog = [
   {
@@ -345,6 +345,7 @@ const premiumDetails: Record<string, {
 function localProductImages(slug: string) {
   if (slug === "kitchen-king-masala") return ["/images/products/kitchen-king-masala.jpg"];
   if (slug === "sacred-garam-masala") return ["/images/products/sacred-garam-masala-1.png"];
+  if (slug === "diwali-spice-gift-box") return ["/images/products/diwali-spice-gift-box-1.png"];
   return [`/images/products/${slug}.jpg`, `/images/products/${slug}-1.jpg`, `/images/products/${slug}-2.jpg`];
 }
 

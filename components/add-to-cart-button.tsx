@@ -56,7 +56,7 @@ export function AddToCartButton({
       disabled={status === "loading"}
       className={
         className ??
-        "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-saffron px-5 py-3 text-sm font-semibold text-obsidian transition hover:bg-turmeric disabled:cursor-wait disabled:opacity-70"
+        "inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-saffron px-4 py-2.5 text-sm font-semibold text-obsidian transition hover:bg-turmeric disabled:cursor-wait disabled:opacity-70"
       }
     >
       <ShoppingBag size={17} />

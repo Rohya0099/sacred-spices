@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/api";
 import { requireAdmin } from "@/lib/auth";
+import { sendOrderStatusEmail } from "@/lib/email-notifications";
 import { serializeAdminOrder } from "@/lib/serializers";
 import { verifyCsrf } from "@/lib/security";
 
@@ -36,6 +37,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       },
       include: { user: true, items: { include: { product: true } } }
     });
+    const emailStatuses = ["PACKED", "SHIPPED", "DELIVERED", "CANCELLED", "REFUNDED"];
+    if (parsed.data.status && parsed.data.status !== existing.status && emailStatuses.includes(parsed.data.status)) {
+      const emailResult = await sendOrderStatusEmail(order);
+      if (!emailResult.ok && !emailResult.skipped) {
+        console.warn("Email delivery failed for order status update");
+      }
+    }
 
     return NextResponse.json({ order: serializeAdminOrder(order) });
   } catch (error) {

@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getOrCreateCart } from "@/lib/cart";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/api";
+import { ensureOrderEmailRecipient, isValidEmailAddress, logOrderEmailResult, logOrderEmailTriggered } from "@/lib/email-diagnostics";
+import { sendOrderPlacedEmail } from "@/lib/email-notifications";
 import { getSessionUser, requireUser } from "@/lib/auth";
 import { serializeOrder } from "@/lib/serializers";
 import { shouldCreatePreorderFromCheckout } from "@/lib/preorder";
@@ -109,11 +111,20 @@ export async function POST(request: Request) {
             }))
           }
         },
-        include: { items: { include: { product: true } } }
+        include: { user: true, items: { include: { product: true } } }
       });
 
       return created;
     });
+
+    logOrderEmailTriggered("order-placed");
+    const orderWithEmail = await ensureOrderEmailRecipient(order);
+    if (isValidEmailAddress(orderWithEmail.user?.email)) {
+      const emailResult = await sendOrderPlacedEmail(orderWithEmail);
+      logOrderEmailResult("order-placed", emailResult);
+    } else {
+      logOrderEmailResult("order-placed", { ok: false, skipped: true, reason: "recipient_missing_or_invalid" });
+    }
 
     return NextResponse.json({ order: serializeOrder(order) }, { status: 201 });
   } catch (error) {

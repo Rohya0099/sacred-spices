@@ -4,6 +4,7 @@ import { z } from "zod";
 import { hashPassword, setSessionCookie } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/api";
+import { sendWelcomeEmail } from "@/lib/email-notifications";
 import { rateLimit, sanitizeText, validateStrongPassword, verifyCsrf } from "@/lib/security";
 
 const registerSchema = z.object({
@@ -61,6 +62,10 @@ export async function POST(request: Request) {
 
     const sessionUser = { id: user.id, email: user.email, name: user.name, role: user.role };
     await setSessionCookie(sessionUser);
+    const emailResult = await sendWelcomeEmail(user);
+    if (!emailResult.ok && !emailResult.skipped) {
+      console.warn("Email delivery failed for registration");
+    }
     return NextResponse.json({ user: sessionUser }, { status: 201 });
   } catch (error) {
     return handleApiError(error);

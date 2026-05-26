@@ -17,7 +17,7 @@ export async function markOrderPaid({
         ...(orderId ? { id: orderId } : { razorpayOrderId }),
         ...(userId ? { userId } : {})
       },
-      include: { items: { include: { product: true } } }
+      include: { user: true, items: { include: { product: true } } }
     });
 
     if (!order) {
@@ -25,7 +25,7 @@ export async function markOrderPaid({
     }
 
     if (order.status === "CONFIRMED") {
-      return order;
+      return { ...order, paymentJustConfirmed: false };
     }
 
     const unavailable = order.items.find((item) => item.product.inventory < item.quantity);
@@ -47,14 +47,16 @@ export async function markOrderPaid({
       await tx.cartItem.deleteMany({ where: { cart: { is: { userId: order.userId } } } });
     }
 
-    return tx.order.update({
+    const updated = await tx.order.update({
       where: { id: order.id },
       data: {
         status: "CONFIRMED",
         razorpayOrderId,
         razorpayPaymentId
       },
-      include: { items: { include: { product: true } } }
+      include: { user: true, items: { include: { product: true } } }
     });
+
+    return { ...updated, paymentJustConfirmed: true };
   });
 }

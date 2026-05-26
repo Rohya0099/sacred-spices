@@ -9,20 +9,12 @@ const forgotPasswordSchema = z.object({
   email: z.string().trim().email()
 });
 
-const genericMessage = "If an account exists, a reset link has been sent.";
-const unavailableMessage = "Please contact support to reset your password.";
-
-function hasEmailProvider() {
-  return Boolean(process.env.RESEND_API_KEY || process.env.SENDGRID_API_KEY);
-}
+const genericMessage = "If account exists, email sent";
 
 export async function POST(request: Request) {
   try {
     await rateLimit("forgot-password", 5, 60 * 60 * 1000);
     await verifyCsrf(request);
-    if (!hasEmailProvider()) {
-      return NextResponse.json({ message: unavailableMessage });
-    }
 
     const body = await request.json().catch(() => null);
     const parsed = forgotPasswordSchema.safeParse(body);

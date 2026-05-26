@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { csrfFetch } from "@/lib/client-security";
 
 export function ResetPasswordForm() {
@@ -32,14 +33,8 @@ export function ResetPasswordForm() {
   return (
     <form action={submit} className="rounded-lg border border-turmeric/16 bg-charcoal p-6 shadow-glow">
       <div className="grid gap-4">
-        <label className="grid gap-2 text-sm text-ivory/72">
-          New password
-          <input name="password" type="password" autoComplete="new-password" required className="field" />
-        </label>
-        <label className="grid gap-2 text-sm text-ivory/72">
-          Confirm new password
-          <input name="confirmPassword" type="password" autoComplete="new-password" required className="field" />
-        </label>
+        <PasswordField name="password" label="New password" />
+        <PasswordField name="confirmPassword" label="Confirm new password" />
       </div>
       {message ? <p className={`mt-4 rounded-lg border p-3 text-sm ${success ? "border-saffron/25 bg-saffron/10 text-ivory" : "border-rose/30 bg-rose/10 text-ivory"}`}>{message}</p> : null}
       <button disabled={loading || !token || success} className="mt-5 inline-flex w-full justify-center rounded-full bg-saffron px-6 py-4 font-semibold text-obsidian transition hover:bg-turmeric disabled:cursor-not-allowed disabled:opacity-70">
@@ -47,5 +42,32 @@ export function ResetPasswordForm() {
       </button>
       {success ? <Link href="/login" className="mt-4 inline-flex text-sm font-semibold text-saffron">Login with new password</Link> : null}
     </form>
+  );
+}
+
+function PasswordField({ name, label }: { name: string; label: string }) {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <label className="grid gap-2 text-sm text-ivory/72">
+      {label}
+      <span className="relative">
+        <input
+          name={name}
+          type={visible ? "text" : "password"}
+          autoComplete="new-password"
+          required
+          className="field w-full pr-12"
+        />
+        <button
+          type="button"
+          onClick={() => setVisible((current) => !current)}
+          className="absolute right-3 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-full text-ivory/58 transition hover:bg-ivory/8 hover:text-saffron"
+          aria-label={visible ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
+        >
+          {visible ? <EyeOff size={17} /> : <Eye size={17} />}
+        </button>
+      </span>
+    </label>
   );
 }

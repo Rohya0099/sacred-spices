@@ -6,6 +6,8 @@ import { handleApiError } from "@/lib/api";
 import { requireUser } from "@/lib/auth";
 import { assertEnv, rateLimit, verifyCsrf } from "@/lib/security";
 import { markOrderPaid } from "@/lib/orders";
+import { ensureOrderEmailRecipient, isValidEmailAddress, logOrderEmailResult, logOrderEmailTriggered } from "@/lib/email-diagnostics";
+import { sendPaymentReceivedEmail } from "@/lib/email-notifications";
 
 const verifySchema = z.object({
   orderId: z.string().min(1),
@@ -63,6 +65,16 @@ export async function POST(request: Request) {
       razorpayOrderId: parsed.data.razorpayOrderId,
       razorpayPaymentId: parsed.data.razorpayPaymentId
     });
+    if (order.paymentJustConfirmed) {
+      logOrderEmailTriggered("payment-received");
+      const orderWithEmail = await ensureOrderEmailRecipient(order);
+      if (isValidEmailAddress(orderWithEmail.user?.email)) {
+        const emailResult = await sendPaymentReceivedEmail(orderWithEmail);
+        logOrderEmailResult("payment-received", emailResult);
+      } else {
+        logOrderEmailResult("payment-received", { ok: false, skipped: true, reason: "recipient_missing_or_invalid" });
+      }
+    }
 
     return NextResponse.json({ verified: true, orderId: order.id, trackingCode: order.trackingCode });
   } catch (error) {

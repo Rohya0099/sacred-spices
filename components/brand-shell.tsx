@@ -28,17 +28,17 @@ export async function BrandHeader() {
   ];
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-turmeric/15 bg-obsidian shadow-[0_18px_60px_rgba(0,0,0,0.42)]">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-3" aria-label="Sacred Spices home">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+        <Link href="/" className="flex min-w-0 items-center gap-3" aria-label="Sacred Spices home">
           <span className="grid size-10 place-items-center rounded-full border border-turmeric/30 bg-saffron/10 text-saffron">
             <Sparkles size={18} />
           </span>
-          <span>
-            <span className="block font-display text-2xl font-semibold leading-none text-ivory">{businessInfo.brandName}</span>
-            <span className="block text-[11px] uppercase tracking-[0.28em] text-sandalwood">{businessInfo.tagline}</span>
+          <span className="min-w-0">
+            <span className="block truncate font-display text-2xl font-semibold leading-none text-ivory">{businessInfo.brandName}</span>
+            <span className="block truncate text-[11px] uppercase tracking-[0.28em] text-sandalwood">{businessInfo.tagline}</span>
           </span>
         </Link>
-        <nav className="hidden items-center gap-8 text-sm font-medium text-ivory/82 md:flex">
+        <nav className="hidden items-center gap-6 text-sm font-medium text-ivory/82 lg:gap-8 md:flex">
           <ActiveNavLinks items={[...nav, ...accountNav]} />
           {user ? <LogoutButton /> : null}
         </nav>
@@ -67,6 +67,7 @@ export function Footer() {
           <p className="mt-3 max-w-md text-sm leading-6 text-ivory/64">
             Premium Indian spices, masalas, pickles, and AI-guided cooking experiences for soulful homes.
           </p>
+          <p className="mt-3 text-sm font-semibold text-ivory/70">Pure Vegetarian Brand • No artificial additives</p>
           <p className="mt-4 text-sm leading-6 text-ivory/60">{supportDisplay()}</p>
           <p className="text-sm leading-6 text-ivory/50">{publicCityState()}</p>
         </div>
@@ -85,7 +86,7 @@ export function Footer() {
             <FssaiTrustNote compact />
           </div>
           <p className="mt-4 text-sm leading-6 text-ivory/68">
-            Small-batch production. No fake reviews. No false medical claims. Secure payments through Razorpay.
+            Small-batch production. No fake reviews. No false medical claims. Pure vegetarian products.
           </p>
           <Link href="/fssai-license" className="mt-3 inline-flex text-sm font-semibold text-saffron">FSSAI details</Link>
         </div>

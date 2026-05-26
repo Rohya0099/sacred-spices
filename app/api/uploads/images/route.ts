@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { handleApiError } from "@/lib/api";
-import { requireAdmin, requireUser } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { rateLimit, verifyCsrf } from "@/lib/security";
 import { uploadImageToCloudinary } from "@/lib/cloudinary";
 
@@ -22,17 +22,13 @@ function isCloudinaryAuthFailure(error: unknown) {
 export async function POST(request: Request) {
   try {
     await rateLimit("image-upload", 20, 60_000);
+    await requireAdmin();
     await verifyCsrf(request);
     const formData = await request.formData();
     const file = formData.get("file");
     const scope = formData.get("scope");
     if (!(file instanceof File) || (scope !== "product" && scope !== "community")) {
       return NextResponse.json({ error: "Invalid image upload request." }, { status: 400 });
-    }
-    if (scope === "product") {
-      await requireAdmin();
-    } else {
-      await requireUser();
     }
     const configError = missingCloudinaryConfig();
     if (configError) {

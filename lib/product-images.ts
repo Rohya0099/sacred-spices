@@ -19,7 +19,7 @@ const keywordImageMap: Array<{ keywords: string[]; image: string }> = [
   { keywords: ["kolhapuri"], image: "/images/products/kolhapuri-masala.jpg" },
   { keywords: ["kitchen king"], image: "/images/products/kitchen-king-masala.jpg" },
   { keywords: ["garam"], image: "/images/products/sacred-garam-masala-1.png" },
-  { keywords: ["gift", "box", "festival", "diwali"], image: "/images/products/diwali-spice-gift-box.jpg" },
+  { keywords: ["gift", "box", "festival", "diwali"], image: "/images/products/diwali-spice-gift-box-1.png" },
   { keywords: ["masala", "spice", "spices"], image: "/images/products/spices.jpg" }
 ];
 
@@ -27,6 +27,7 @@ function preferredLocalImageForProduct(name?: string | null, slug?: string | nul
   const value = `${name ?? ""} ${slug ?? ""}`.toLowerCase();
   if (value.includes("kitchen-king") || value.includes("kitchen king")) return "/images/products/kitchen-king-masala.jpg";
   if (value.includes("garam-masala") || value.includes("garam masala")) return "/images/products/sacred-garam-masala-1.png";
+  if (value.includes("diwali-spice-gift-box") || value.includes("diwali") || value.includes("gift box")) return "/images/products/diwali-spice-gift-box-1.png";
   return null;
 }
 

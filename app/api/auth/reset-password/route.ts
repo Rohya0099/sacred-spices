@@ -40,13 +40,8 @@ export async function POST(request: Request) {
         where: { id: resetToken.userId },
         data: { passwordHash: hashPassword(parsed.data.password) }
       }),
-      prisma.passwordResetToken.update({
-        where: { id: resetToken.id },
-        data: { usedAt: new Date() }
-      }),
-      prisma.passwordResetToken.updateMany({
-        where: { userId: resetToken.userId, usedAt: null, id: { not: resetToken.id } },
-        data: { usedAt: new Date() }
+      prisma.passwordResetToken.deleteMany({
+        where: { userId: resetToken.userId, usedAt: null }
       })
     ]);
 

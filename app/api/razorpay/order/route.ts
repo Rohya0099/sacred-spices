@@ -4,11 +4,23 @@ import Razorpay from "razorpay";
 import { handleApiError } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { assertEnv, rateLimit, verifyCsrf } from "@/lib/security";
+import { rateLimit, verifyCsrf } from "@/lib/security";
 
 const orderSchema = z.object({
   orderId: z.string().min(1)
 });
+
+function isMissingOrDummy(value?: string) {
+  return !value?.trim() || value.toLowerCase().includes("dummy");
+}
+
+function paymentUnavailable(reason: string) {
+  console.warn(`Razorpay order unavailable: ${reason}`);
+  return NextResponse.json({
+    success: false,
+    message: "Online payment is temporarily unavailable"
+  });
+}
 
 export async function POST(request: Request) {
   try {
@@ -40,23 +52,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "This product is currently unavailable." }, { status: 409 });
     }
 
-    const keyId = assertEnv("RAZORPAY_KEY_ID");
-    const keySecret = assertEnv("RAZORPAY_KEY_SECRET");
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    if (isMissingOrDummy(keyId) || isMissingOrDummy(keySecret)) {
+      return paymentUnavailable(isMissingOrDummy(keyId) ? "missing_or_dummy_key_id" : "missing_or_dummy_key_secret");
+    }
+
     const razorpay = new Razorpay({
       key_id: keyId,
       key_secret: keySecret
     });
 
     const amount = Math.round(Number(localOrder.total) * 100);
-    const order = await razorpay.orders.create({
-      amount,
-      currency: "INR",
-      receipt: localOrder.id,
-      notes: {
-        sacredOrderId: localOrder.id,
-        trackingCode: localOrder.trackingCode
-      }
-    });
+    let order;
+    try {
+      order = await razorpay.orders.create({
+        amount,
+        currency: "INR",
+        receipt: localOrder.id,
+        notes: {
+          sacredOrderId: localOrder.id,
+          trackingCode: localOrder.trackingCode
+        }
+      });
+    } catch {
+      return paymentUnavailable("razorpay_order_create_failed");
+    }
 
     await prisma.order.update({
       where: { id: localOrder.id },
@@ -66,6 +87,7 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({
+      success: true,
       keyId,
       order: {
         id: order.id,

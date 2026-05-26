@@ -26,7 +26,7 @@ export default async function ProductsPage() {
 
   return (
     <PageShell>
-      <section className="px-4 py-16 sm:px-6 lg:px-8">
+      <section className="px-4 pb-16 pt-10 sm:px-6 sm:pt-12 lg:px-8 lg:pt-14">
         <div className="mx-auto max-w-7xl">
           <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Products" }]} />
           <p className="text-sm font-semibold uppercase tracking-[0.28em] text-saffron">Products</p>
@@ -35,7 +35,7 @@ export default async function ProductsPage() {
             Premium masalas, pickles, blends, and festive boxes with clear actions to add to cart or buy now.
           </p>
           {products.length ? (
-            <div className="mt-10 grid items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="mx-auto mt-10 grid max-w-6xl items-stretch gap-5 md:grid-cols-2 lg:grid-cols-3">
               {products.map((product) => (
                 <ProductCard key={product.slug} product={product} />
               ))}

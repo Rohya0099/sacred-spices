@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/api";
 import { assertEnv } from "@/lib/security";
 import { markOrderPaid } from "@/lib/orders";
+import { ensureOrderEmailRecipient, isValidEmailAddress, logOrderEmailResult, logOrderEmailTriggered } from "@/lib/email-diagnostics";
+import { sendPaymentReceivedEmail } from "@/lib/email-notifications";
 
 type RazorpayWebhookPayload = {
   id?: string;
@@ -59,10 +61,20 @@ export async function POST(request: Request) {
     }
 
     if (payload.event === "payment.captured" && payment?.order_id && payment.id) {
-      await markOrderPaid({
+      const order = await markOrderPaid({
         razorpayOrderId: payment.order_id,
         razorpayPaymentId: payment.id
       });
+      if (order.paymentJustConfirmed) {
+        logOrderEmailTriggered("payment-received");
+        const orderWithEmail = await ensureOrderEmailRecipient(order);
+        if (isValidEmailAddress(orderWithEmail.user?.email)) {
+          const emailResult = await sendPaymentReceivedEmail(orderWithEmail);
+          logOrderEmailResult("payment-received", emailResult);
+        } else {
+          logOrderEmailResult("payment-received", { ok: false, skipped: true, reason: "recipient_missing_or_invalid" });
+        }
+      }
     }
 
     if (payload.event === "payment.failed" && payment?.order_id) {

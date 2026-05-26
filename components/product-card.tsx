@@ -23,9 +23,9 @@ export type ProductCardData = {
 
 export function ProductCard({ product }: { product: ProductCardData }) {
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-lg border border-turmeric/16 bg-charcoal shadow-glow">
-      <Link href={`/products/${product.slug}`} className="block">
-        <div className="relative h-64 overflow-hidden bg-obsidian">
+    <article className="group flex h-full flex-col overflow-hidden rounded-lg border border-turmeric/16 bg-charcoal shadow-glow transition hover:border-turmeric/28">
+      <Link href={`/products/${product.slug}`} className="block" aria-label={`View ${product.name}`}>
+        <div className="relative h-48 overflow-hidden bg-obsidian sm:h-52 lg:h-60">
           <ProductPremiumInteraction
             name={product.name}
             category={product.category}
@@ -39,50 +39,45 @@ export function ProductCard({ product }: { product: ProductCardData }) {
             {product.category}
           </span>
           {product.badge ? (
-            <span className="absolute right-4 top-4 rounded-full bg-saffron px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-obsidian">
+            <span className="absolute right-4 top-4 rounded-full bg-saffron px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-obsidian">
               {product.badge}
             </span>
           ) : null}
         </div>
       </Link>
-      <div className="flex flex-1 flex-col p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="font-display text-2xl font-semibold text-ivory">{product.name}</h3>
-            <p className="mt-1 text-sm text-ivory/60">{product.taste}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-lg font-semibold text-saffron">Rs. {product.price}</p>
-            {product.weight ? <p className="mt-1 text-xs text-ivory/45">{product.weight}</p> : null}
-          </div>
-        </div>
-        <div className="mt-4 flex items-center justify-between gap-3">
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
+        <Link href={`/products/${product.slug}`} className="block" aria-label={`View ${product.name}`}>
+          <h3 className="font-display text-2xl font-semibold leading-tight text-ivory transition group-hover:text-saffron">{product.name}</h3>
+          <p className="mt-1.5 text-sm leading-5 text-ivory/60">{product.taste}</p>
+        </Link>
+        <div className="mt-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-1 text-ember" aria-label={`Spice level ${product.spice} out of 5`}>
             {Array.from({ length: 5 }).map((_, index) => (
-              <Flame key={index} size={15} className={index < product.spice ? "opacity-100" : "opacity-25"} />
+              <Flame key={index} size={15} className={index < product.spice ? "fill-current opacity-100" : "opacity-25"} />
             ))}
           </div>
           {product.spiceLevelLabel ? <span className="rounded-full border border-turmeric/20 px-3 py-1 text-xs text-ivory/62">{product.spiceLevelLabel}</span> : null}
         </div>
-        <p className="mt-4 line-clamp-3 min-h-[4.5rem] text-sm leading-6 text-ivory/62">{product.story}</p>
-        <div className="mt-3 flex flex-wrap gap-2 text-[0.68rem] font-semibold text-ivory/60">
+        <p className="mt-3 line-clamp-2 min-h-12 text-sm leading-6 text-ivory/62">{product.story}</p>
+        <div className="mt-3 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-xl font-semibold text-saffron">Rs. {product.price.toLocaleString("en-IN")}</p>
+            {product.weight ? <p className="mt-1 text-xs text-ivory/45">{product.weight}</p> : null}
+          </div>
           {typeof product.inventory === "number" && product.inventory <= 20 ? (
-            <span className="rounded-full border border-ember/30 px-3 py-1 text-ember">Only {product.inventory} left</span>
-          ) : (
-            <span className="rounded-full border border-turmeric/20 px-3 py-1">Prepared in small batches</span>
-          )}
-          <span className="rounded-full border border-turmeric/20 px-3 py-1">Ships in 1-3 days</span>
+            <span className="rounded-full border border-ember/30 px-3 py-1 text-[0.68rem] font-semibold text-ember">Only {product.inventory} left</span>
+          ) : null}
         </div>
-        <div className="mt-auto grid gap-3 pt-5">
+        <div className="mt-auto grid gap-3 pt-4">
           <div className="grid gap-3 sm:grid-cols-2">
-          <AddToCartButton productId={product.slug} returnTo={`/products/${product.slug}`} />
-          <AddToCartButton
-            productId={product.slug}
-            action="buy"
-            label="Buy now"
-            returnTo={`/products/${product.slug}`}
-            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-saffron/60 px-5 py-3 text-sm font-semibold text-saffron transition hover:bg-saffron hover:text-obsidian disabled:cursor-wait disabled:opacity-70"
-          />
+            <AddToCartButton productId={product.slug} returnTo={`/products/${product.slug}`} />
+            <AddToCartButton
+              productId={product.slug}
+              action="buy"
+              label="Buy now"
+              returnTo={`/products/${product.slug}`}
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-saffron/60 px-4 py-2.5 text-sm font-semibold text-saffron transition hover:bg-saffron hover:text-obsidian disabled:cursor-wait disabled:opacity-70"
+            />
           </div>
           {product.isPreorderEligible ? (
             <AddToCartButton
