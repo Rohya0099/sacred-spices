@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";
+import { createMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Privacy Policy" };
+export const metadata: Metadata = createMetadata({
+  title: "Privacy Policy for Sacred Spices",
+  description: "Understand how Sacred Spices handles account, order, payment, support, and personalization data.",
+  path: "/privacy-policy"
+});
 
 export default function PrivacyPolicyPage() {
   return (

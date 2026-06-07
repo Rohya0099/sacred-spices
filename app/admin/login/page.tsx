@@ -1,6 +1,15 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { PageShell } from "@/components/brand-shell";
 import { AuthForm } from "@/components/auth-form";
+import { createMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = createMetadata({
+  title: "Admin Login",
+  description: "Protected Sacred Spices admin login for authorized operators.",
+  path: "/admin/login",
+  noIndex: true
+});
 
 export default function AdminLoginPage() {
   return (

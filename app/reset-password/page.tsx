@@ -1,8 +1,14 @@
 import { Suspense } from "react";
 import { PageShell } from "@/components/brand-shell";
 import { ResetPasswordForm } from "@/components/reset-password-form";
+import { createMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Reset Password" };
+export const metadata = createMetadata({
+  title: "Reset Password",
+  description: "Choose a new Sacred Spices account password using your secure reset link.",
+  path: "/reset-password",
+  noIndex: true
+});
 
 export default function ResetPasswordPage() {
   return (

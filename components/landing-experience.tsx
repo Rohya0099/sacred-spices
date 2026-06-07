@@ -34,13 +34,13 @@ export function LandingExperience({ featuredProducts }: { featuredProducts: Prod
             transition={{ duration: 0.9, ease: "easeOut" }}
             className="max-w-3xl pb-12"
           >
-            <p className="text-sm font-semibold uppercase tracking-[0.34em] text-saffron">AI-first Indian food luxury</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.34em] text-saffron">Indian masalas, pickles and spice blends</p>
             <p className="mt-4 text-sm font-semibold text-ivory/76">100% Pure Vegetarian Products</p>
             <h1 className="mt-6 font-display text-6xl font-semibold leading-[0.95] text-ivory sm:text-7xl lg:text-8xl">
               Sacred Flavors of India
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-8 text-ivory/76 sm:text-xl">
-              Food carries energy. Discover masalas, pickles, chutneys, and ritual cooking guidance shaped by memory, region, and family warmth.
+              Food carries energy. Discover authentic Indian masalas, spice blends, chai masala, biryani masala, turmeric powder, red chilli powder, and traditional pickles for everyday cooking.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Link href="/taste-guru" className="inline-flex items-center justify-center gap-2 rounded-full bg-saffron px-6 py-4 font-semibold text-obsidian shadow-ember transition hover:bg-turmeric">
@@ -59,7 +59,7 @@ export function LandingExperience({ featuredProducts }: { featuredProducts: Prod
       <Section
         eyebrow="Sacred philosophy"
         title="Cooking is not a transaction. It is attention, memory, and offering."
-        copy="Sacred Spices is built for people who still remember the sound of tadka, the care in a lunchbox, the fragrance of festivals, and the quiet dignity of a family recipe."
+        copy="Sacred Spices is an Indian masala and pickle brand built for people who still remember the sound of tadka, the care in a lunchbox, the fragrance of homemade-style masalas, and the quiet dignity of a family recipe."
       >
         <div className="grid gap-4 md:grid-cols-3">
           {rituals.map((ritual) => (
@@ -116,7 +116,7 @@ export function LandingExperience({ featuredProducts }: { featuredProducts: Prod
             { icon: ShieldCheck, title: fssaiDisplay, copy: "Sacred Spices is in early-access small-batch launch. The registration number will appear once issued." },
             { icon: CreditCard, title: "Secure payments", copy: "Razorpay checkout with server-side payment verification and no card data stored by Sacred Spices." },
             { icon: IndianRupee, title: "Made in India", copy: "Rooted in Indian kitchens, regional memories, and practical everyday cooking." },
-            { icon: Sprout, title: "Authentic sourcing", copy: "Sourcing stories are written honestly and updated only when supplier details are verified." },
+            { icon: Sprout, title: "Honest sourcing notes", copy: "Sourcing stories are written honestly and updated only when supplier details are verified." },
             { icon: PackageCheck, title: "Small-batch quality", copy: "Small-batch production. No fake reviews. No false medical claims." },
             { icon: Headphones, title: "Customer support", copy: "Order support, delivery questions, and product guidance through launch-ready care channels." }
           ].map((item) => (

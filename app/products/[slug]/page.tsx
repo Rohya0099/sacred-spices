@@ -1,6 +1,7 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Flame, Heart, Leaf, Sparkles, Star } from "lucide-react";
+import { Flame, Heart, Leaf, Sparkles } from "lucide-react";
 import { PageShell } from "@/components/brand-shell";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { ProductCard } from "@/components/product-card";
@@ -11,17 +12,82 @@ import { prisma } from "@/lib/prisma";
 import { isPreorderEligible } from "@/lib/preorder";
 import { productToCard } from "@/lib/product-view";
 import { resolveProductImage, resolveProductImages } from "@/lib/product-images";
+import { absoluteUrl, createMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const dbProduct = await prisma.product
+async function findProductBySlug(slug: string) {
+  return prisma.product
     .findUnique({
       where: { slug },
       include: { category: true }
     })
     .catch(() => null);
+}
+
+function productSeoDescription(input: {
+  name: string;
+  category?: string | null;
+  description?: string | null;
+  bestWith?: string[] | null;
+  tasteProfile?: string[] | null;
+}) {
+  const useCase = input.bestWith?.length ? ` Best used for ${input.bestWith.slice(0, 3).join(", ")}.` : "";
+  const taste = input.tasteProfile?.length ? ` Taste profile: ${input.tasteProfile.slice(0, 3).join(", ")}.` : "";
+  const base = input.description?.trim() || `Shop ${input.name} by Sacred Spices for Indian home cooking.`;
+  return `${input.name} by Sacred Spices is a ${input.category ?? "Indian spice"} for authentic Indian flavours.${useCase}${taste} ${base}`.slice(0, 155);
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const dbProduct = await findProductBySlug(slug);
+  const staticProduct = products.find((item) => item.slug === slug);
+  const name = dbProduct?.name ?? staticProduct?.name ?? "Product";
+  if (dbProduct && !dbProduct.isActive) {
+    return createMetadata({
+      title: `${name} Unavailable`,
+      description: "This Sacred Spices product is currently unavailable.",
+      path: `/products/${slug}`,
+      noIndex: true
+    });
+  }
+  const description = dbProduct
+    ? productSeoDescription({
+        name: dbProduct.name,
+        category: dbProduct.category.name,
+        description: dbProduct.description,
+        bestWith: dbProduct.bestWith,
+        tasteProfile: dbProduct.tasteProfile
+      })
+    : staticProduct
+      ? productSeoDescription({
+          name: staticProduct.name,
+          category: staticProduct.category,
+          description: staticProduct.story,
+          tasteProfile: [staticProduct.taste]
+        })
+      : "Explore Sacred Spices pure vegetarian Indian spices, masalas, pickles, and gift boxes.";
+  const image = dbProduct
+    ? resolveProductImage({
+        name: dbProduct.name,
+        slug: dbProduct.slug,
+        category: dbProduct.category.name,
+        primaryImage: dbProduct.primaryImage,
+        images: dbProduct.images
+      })
+    : staticProduct?.image;
+
+  return createMetadata({
+    title: `${name} Online`,
+    description,
+    path: `/products/${slug}`,
+    image
+  });
+}
+
+export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const dbProduct = await findProductBySlug(slug);
   if (!dbProduct && process.env.NODE_ENV === "production") {
     notFound();
   }
@@ -62,6 +128,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         story: dbProduct.emotionalStory,
         badge: dbProduct.badge,
         description: dbProduct.description,
+        inventory: dbProduct.inventory,
         ingredients: dbProduct.ingredients,
         cookingRecommendations: dbProduct.cookingRecommendations,
         bestWith: dbProduct.bestWith,
@@ -75,7 +142,14 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       ? {
           ...staticProduct,
           description: staticProduct.story,
-          images: staticProduct.image ? [staticProduct.image] : [],
+          inventory: 0,
+          images: resolveProductImages({
+            name: staticProduct.name,
+            slug: staticProduct.slug,
+            category: staticProduct.category,
+            primaryImage: staticProduct.image,
+            images: staticProduct.image ? [staticProduct.image] : []
+          }),
           weight: "250g",
           packageType: "Premium Pouch",
           ingredients: ["Whole spices", "Roasted aromatics", "Regional chillies"],
@@ -140,11 +214,55 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     ["Description", product.description, Sparkles],
     ["Highlights", [product.taste, product.region, `${product.weight} ${product.packageType}`, product.shelfLife].join(" · "), Heart],
     ["Usage", product.bestWith.length ? product.bestWith.join(", ") : product.cookingRecommendations.join(", "), Leaf],
+    ["Ingredients", product.ingredients.length ? product.ingredients.join(", ") : "Ingredient details will be shown when available.", Leaf],
+    ["Storage and shelf life", [product.storageInstructions, product.shelfLife].filter(Boolean).join(" "), Sparkles],
+    ["Availability", product.inventory > 0 ? `Available now. ${product.inventory} units currently listed.` : "Currently out of stock.", Heart],
     ["Why this product", product.handcraftedNotes, Sparkles]
   ] as const;
 
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description,
+    image: product.images.length ? product.images.map((item) => absoluteUrl(item)) : product.image ? [absoluteUrl(product.image)] : undefined,
+    brand: {
+      "@type": "Brand",
+      name: "Sacred Spices"
+    },
+    category: product.category,
+    offers: {
+      "@type": "Offer",
+      url: absoluteUrl(`/products/${product.slug}`),
+      priceCurrency: "INR",
+      price: product.price,
+      availability: product.inventory > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      itemCondition: "https://schema.org/NewCondition"
+    },
+    additionalProperty: [
+      { "@type": "PropertyValue", name: "Pack size", value: product.weight },
+      { "@type": "PropertyValue", name: "Spice level", value: product.spiceLevelLabel },
+      { "@type": "PropertyValue", name: "Vegetarian", value: "100% Vegetarian" }
+    ]
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") },
+      { "@type": "ListItem", position: 2, name: "Products", item: absoluteUrl("/products") },
+      { "@type": "ListItem", position: 3, name: product.name, item: absoluteUrl(`/products/${product.slug}`) }
+    ]
+  };
+
   return (
     <PageShell>
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([productSchema, breadcrumbSchema]) }}
+      />
       <section className="px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <div className="mx-auto max-w-7xl">
           <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Products", href: "/products" }, { label: product.name }]} />
@@ -164,12 +282,6 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
             <div>
               <h1 className="font-display text-5xl font-semibold leading-tight text-ivory sm:text-6xl">{product.name}</h1>
-              <div className="mt-3 flex items-center gap-2 text-saffron/85" aria-label="Rated 4.8 out of 5">
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <Star key={index} size={16} className={index === 4 ? "fill-current opacity-55" : "fill-current"} />
-                ))}
-                <span className="ml-1 text-sm font-semibold text-ivory/62">4.8</span>
-              </div>
               <p className="mt-4 max-w-2xl text-base leading-7 text-ivory/68">{product.description}</p>
             </div>
 

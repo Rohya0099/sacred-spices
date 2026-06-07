@@ -15,6 +15,7 @@ type SeoInput = {
   path?: string;
   image?: string | null;
   noIndex?: boolean;
+  titleAbsolute?: boolean;
 };
 
 export function absoluteUrl(path = "/") {
@@ -22,18 +23,19 @@ export function absoluteUrl(path = "/") {
   return `${siteUrl}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
-export function createMetadata({ title, description, path = "/", image = defaultSeoImage, noIndex = false }: SeoInput): Metadata {
+export function createMetadata({ title, description, path = "/", image = defaultSeoImage, noIndex = false, titleAbsolute = false }: SeoInput): Metadata {
   const url = absoluteUrl(path);
   const imageUrl = image ? absoluteUrl(image) : absoluteUrl(defaultSeoImage);
+  const brandedTitle = title.includes(businessInfo.brandName) ? title : `${title} | ${businessInfo.brandName}`;
 
   return {
-    title,
+    title: titleAbsolute ? { absolute: title } : title,
     description,
     alternates: {
       canonical: url
     },
     openGraph: {
-      title: `${title} | ${businessInfo.brandName}`,
+      title: brandedTitle,
       description,
       url,
       siteName: businessInfo.brandName,
@@ -43,7 +45,7 @@ export function createMetadata({ title, description, path = "/", image = default
     },
     twitter: {
       card: "summary_large_image",
-      title: `${title} | ${businessInfo.brandName}`,
+      title: brandedTitle,
       description,
       images: [imageUrl]
     },
@@ -59,12 +61,19 @@ export function organizationSchema() {
     url: siteUrl,
     email: businessInfo.supportEmail,
     telephone: businessInfo.supportPhone,
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      email: businessInfo.supportEmail,
+      telephone: businessInfo.supportPhone,
+      areaServed: "IN",
+      availableLanguage: ["en", "hi", "mr"]
+    },
     address: {
       "@type": "PostalAddress",
       addressLocality: businessInfo.cityState,
       addressCountry: "IN"
-    },
-    sameAs: []
+    }
   };
 }
 
@@ -74,11 +83,6 @@ export function websiteSchema() {
     "@type": "WebSite",
     name: businessInfo.brandName,
     url: siteUrl,
-    description: "Pure vegetarian Indian spices, homemade masalas, pickles, and premium gift boxes.",
-    potentialAction: {
-      "@type": "SearchAction",
-      target: `${siteUrl}/products?search={search_term_string}`,
-      "query-input": "required name=search_term_string"
-    }
+    description: "Pure vegetarian Indian spices, homemade masalas, pickles, and premium gift boxes."
   };
 }

@@ -67,7 +67,7 @@ export function Footer() {
           <p className="mt-3 max-w-md text-sm leading-6 text-ivory/64">
             Premium Indian spices, masalas, pickles, and AI-guided cooking experiences for soulful homes.
           </p>
-          <p className="mt-3 text-sm font-semibold text-ivory/70">Pure Vegetarian Brand • No artificial additives</p>
+          <p className="mt-3 text-sm font-semibold text-ivory/70">Pure vegetarian Indian food brand</p>
           <p className="mt-4 text-sm leading-6 text-ivory/60">{supportDisplay()}</p>
           <p className="text-sm leading-6 text-ivory/50">{publicCityState()}</p>
         </div>

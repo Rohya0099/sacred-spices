@@ -2,8 +2,13 @@ import type { Metadata } from "next";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { PageShell } from "@/components/brand-shell";
 import { publicCityState, publicSupportEmail, publicSupportPhone, publicWhatsAppNumber } from "@/lib/business-info";
+import { createMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Contact" };
+export const metadata: Metadata = createMetadata({
+  title: "Contact Sacred Spices Support",
+  description: "Contact Sacred Spices for Indian masala product questions, order support, delivery help, WhatsApp support, and spice guidance.",
+  path: "/contact"
+});
 
 export default function ContactPage() {
   return (

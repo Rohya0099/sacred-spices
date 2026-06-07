@@ -1,10 +1,18 @@
+import type { Metadata } from "next";
 import { Camera, MessageCircle, Utensils } from "lucide-react";
 import { PageShell } from "@/components/brand-shell";
 import { CommunityPostForm } from "@/components/community-post-form";
+import { createMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = createMetadata({
+  title: "Sacred Kitchen Community Recipes",
+  description: "Share Indian cooking memories, family recipes, masala ideas, and real kitchen stories with the Sacred Spices community.",
+  path: "/community"
+});
 
 const prompts = [
   ["Share recipes", "Post how a masala lives inside your everyday cooking.", Utensils],
-  ["Family food stories", "Preserve memories from parents, grandparents, festivals, and regional homes.", MessageCircle],
+  ["Family food stories", "Preserve memories from parents, grandparents, seasonal kitchens, and regional homes.", MessageCircle],
   ["Cooking photos", "Upload real kitchen moments, plated dishes, and seasonal food traditions.", Camera]
 ];
 

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { PageShell } from "@/components/brand-shell";
@@ -5,6 +6,14 @@ import { PrintButton } from "@/components/print-button";
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { businessInfo, fssaiDisplay, supportDisplay } from "@/lib/business-info";
+import { createMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = createMetadata({
+  title: "Admin Invoice",
+  description: "Protected Sacred Spices admin invoice page.",
+  path: "/admin/orders",
+  noIndex: true
+});
 
 function formatAddress(address: unknown) {
   if (!address || typeof address !== "object") return "Address unavailable";

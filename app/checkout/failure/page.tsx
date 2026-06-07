@@ -1,6 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
 import { PageShell } from "@/components/brand-shell";
+import { createMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = createMetadata({
+  title: "Payment Not Completed",
+  description: "Sacred Spices checkout payment failure page with a safe return to checkout.",
+  path: "/checkout/failure",
+  noIndex: true
+});
 
 export default function CheckoutFailurePage() {
   return (

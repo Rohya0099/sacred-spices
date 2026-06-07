@@ -5,8 +5,14 @@ import { Heart, Home, PackageCheck, Sparkles, UserRound } from "lucide-react";
 import { PageShell } from "@/components/brand-shell";
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { createMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Account" };
+export const metadata: Metadata = createMetadata({
+  title: "Customer Account",
+  description: "Manage your Sacred Spices profile, orders, wishlist, addresses, and Indian spice preferences.",
+  path: "/account",
+  noIndex: true
+});
 
 function formatAddress(address: unknown) {
   if (!address || typeof address !== "object") return "Saved address unavailable";

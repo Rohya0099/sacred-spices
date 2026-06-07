@@ -1,6 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { PageShell } from "@/components/brand-shell";
+import { createMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = createMetadata({
+  title: "Payment Received",
+  description: "Sacred Spices payment confirmation and order tracking access.",
+  path: "/checkout/success",
+  noIndex: true
+});
 
 export default async function CheckoutSuccessPage({ searchParams }: { searchParams: Promise<{ order?: string }> }) {
   const params = await searchParams;

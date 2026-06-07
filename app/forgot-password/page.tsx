@@ -1,7 +1,13 @@
 import { PageShell } from "@/components/brand-shell";
 import { ForgotPasswordForm } from "@/components/forgot-password-form";
+import { createMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Forgot Password" };
+export const metadata = createMetadata({
+  title: "Forgot Password",
+  description: "Request a secure Sacred Spices password reset link for your customer or admin account.",
+  path: "/forgot-password",
+  noIndex: true
+});
 
 export default function ForgotPasswordPage() {
   return (

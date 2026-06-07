@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";
 import { businessInfo } from "@/lib/business-info";
+import { createMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Shipping Policy" };
+export const metadata: Metadata = createMetadata({
+  title: "Shipping Policy for Indian Spice Orders",
+  description: "Read Sacred Spices shipping timelines, processing expectations, and delivery guidance for Indian spice and masala orders.",
+  path: "/shipping-policy"
+});
 
 export default function ShippingPolicyPage() {
   return (

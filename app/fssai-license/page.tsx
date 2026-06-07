@@ -2,8 +2,13 @@ import type { Metadata } from "next";
 import { FssaiTrustNote } from "@/components/fssai-trust-note";
 import { LegalPage } from "@/components/legal-page";
 import { businessInfo, fssaiDisplay } from "@/lib/business-info";
+import { createMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "FSSAI / License" };
+export const metadata: Metadata = createMetadata({
+  title: "FSSAI Registration Status",
+  description: "View Sacred Spices FSSAI registration status and food business launch disclosures.",
+  path: "/fssai-license"
+});
 
 export default function FssaiLicensePage() {
   return (

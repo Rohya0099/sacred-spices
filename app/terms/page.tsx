@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";
+import { createMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Terms and Conditions" };
+export const metadata: Metadata = createMetadata({
+  title: "Terms and Conditions for Sacred Spices",
+  description: "Read Sacred Spices terms for accounts, product information, payments, orders, AI features, and community use.",
+  path: "/terms"
+});
 
 export default function TermsPage() {
   return (

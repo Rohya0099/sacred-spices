@@ -1,6 +1,15 @@
+import type { Metadata } from "next";
 import { PageShell } from "@/components/brand-shell";
 import { AuthForm } from "@/components/auth-form";
 import { Suspense } from "react";
+import { createMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = createMetadata({
+  title: "Login",
+  description: "Login to your Sacred Spices account to manage orders, checkout, wishlist, and Indian spice recommendations.",
+  path: "/login",
+  noIndex: true
+});
 
 export default function LoginPage() {
   return (

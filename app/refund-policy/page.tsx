@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";
+import { createMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Refund Policy" };
+export const metadata: Metadata = createMetadata({
+  title: "Refund Policy for Sacred Spices Orders",
+  description: "Review the Sacred Spices refund and replacement policy for damaged, incorrect, duplicate, or failed orders.",
+  path: "/refund-policy"
+});
 
 export default function RefundPolicyPage() {
   return (

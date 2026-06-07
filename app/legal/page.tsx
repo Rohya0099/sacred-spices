@@ -2,8 +2,13 @@ import type { Metadata } from "next";
 import { FssaiTrustNote } from "@/components/fssai-trust-note";
 import { LegalPage } from "@/components/legal-page";
 import { businessInfo, fssaiDisplay, publicCityState, publicSupportEmail, publicSupportPhone } from "@/lib/business-info";
+import { createMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Legal" };
+export const metadata: Metadata = createMetadata({
+  title: "Legal and Food Business Disclosures",
+  description: "Find Sacred Spices legal, food-business, payment, FSSAI, support, and customer disclosure information.",
+  path: "/legal"
+});
 
 export default function LegalPageRoute() {
   return (
